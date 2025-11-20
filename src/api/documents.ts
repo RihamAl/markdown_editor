@@ -5,7 +5,7 @@ export async function fetchDocuments() {
   const response = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include", // <-- very important for sessions
+    credentials: "include",
     body: JSON.stringify({
       query: `
         query {
@@ -13,7 +13,6 @@ export async function fetchDocuments() {
             id
             title
             content
-            
           }
         }
       `,
@@ -25,6 +24,7 @@ export async function fetchDocuments() {
   return result.data.documents;
 }
 
+// ✅ استخدام GraphQL variables لتفادي مشاكل Markdown
 export async function createDocument(title: string, content: string) {
   const response = await fetch(API_URL, {
     method: "POST",
@@ -32,14 +32,15 @@ export async function createDocument(title: string, content: string) {
     credentials: "include",
     body: JSON.stringify({
       query: `
-        mutation {
-          createDocument(data: { title: "${title}", content: "${content}" }) {
+        mutation CreateDocument($title: String!, $content: String!) {
+          createDocument(data: { title: $title, content: $content }) {
             id
             title
             content
           }
         }
       `,
+      variables: { title, content },
     }),
   });
 
@@ -55,14 +56,15 @@ export async function updateDocument(id: string, title: string, content: string)
     credentials: "include",
     body: JSON.stringify({
       query: `
-        mutation {
-          updateDocument(where: { id: "${id}" }, data: { title: "${title}", content: "${content}" }) {
+        mutation UpdateDocument($id: ID!, $title: String!, $content: String!) {
+          updateDocument(where: { id: $id }, data: { title: $title, content: $content }) {
             id
             title
             content
           }
         }
       `,
+      variables: { id, title, content },
     }),
   });
 
@@ -78,12 +80,13 @@ export async function deleteDocument(id: string) {
     credentials: "include",
     body: JSON.stringify({
       query: `
-        mutation {
-          deleteDocument(where: { id: "${id}" }) {
+        mutation DeleteDocument($id: ID!) {
+          deleteDocument(where: { id: $id }) {
             id
           }
         }
       `,
+      variables: { id },
     }),
   });
 

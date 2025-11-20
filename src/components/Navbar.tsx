@@ -10,6 +10,11 @@ export default function Navbar() {
         </Typography>
         <Button color="inherit" href="/login">Log In</Button>
         <Button color="inherit" href="/signup">Sign Up</Button>
+        <Button color="inherit" href="http://localhost:3000/auth/google">
+            Login with Google
+        </Button>
+
+        
       </Toolbar>
     </AppBar>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, Button, TextField } from "@mui/material";
+import MDEditor from "@uiw/react-md-editor";
 
 interface Props {
   initialTitle?: string;
@@ -17,6 +18,21 @@ export default function DocumentForm({ initialTitle = "", initialContent = "", o
     onSave(title, content);
   };
 
+  const handleFileUploaded = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fileContent = event.target?.result; 
+        if (typeof fileContent === "string") {
+          setContent(fileContent);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <TextField
@@ -26,14 +42,19 @@ export default function DocumentForm({ initialTitle = "", initialContent = "", o
         required
         fullWidth
       />
-      <TextField
-        label="Content"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        multiline
-        minRows={4}
-        fullWidth
-      />
+      <div data-color-mode="light">
+         <MDEditor value={content} onChange={(value) => setContent(value || "")} />
+        <Button variant="outlined" component='label'>
+          Upload Markdown File
+          <input
+            type="file"
+            accept=".md,.markdown"
+            hidden
+            onChange={handleFileUploaded}
+        />
+        </Button>
+      </div>
+
       <Box sx={{ display: "flex", gap: 2 }}>
         <Button type="submit" variant="contained" color="primary">
           Save
