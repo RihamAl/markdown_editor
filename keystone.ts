@@ -1,7 +1,7 @@
 // keystone.ts
 import 'dotenv/config'; //  هذا يحمّل القيم من .env مباشرة
 import { config, list } from '@keystone-6/core';
-import { text, password, relationship, timestamp } from '@keystone-6/core/fields';
+import { text, password, relationship, timestamp, file } from '@keystone-6/core/fields';
 import { createAuth } from '@keystone-6/auth';
 import { statelessSessions } from '@keystone-6/core/session';
 //import { OAuth2Client } from 'google-auth-library';
@@ -78,6 +78,7 @@ export const Document = list({
     content: text(),
     owner: relationship({ ref: 'User.documents' }), // link with the correct relationship
     createdAt: timestamp({ defaultValue: { kind: 'now' } ,}),
+    contentFile : file({ storage: 'local_files' }),
   },
 
   hooks: {
@@ -108,9 +109,27 @@ export default withAuth(
     db: { provider: 'sqlite', url: 'file:./keystone.db' },
     lists: { User, Document },
     session,
+
+    storage: {
+      local_files: {
+        kind: 'local',
+        type: 'file',
+        generateUrl: path => `/files${path}`,
+        serverRoute: {
+          path: '/files',
+        },
+        storagePath: 'public/files',
+      },
+    },
+
     server: {
       port: 3000,
       cors: { origin: ['http://localhost:5173'], credentials: true },
+    },
+  })
+);
+
+
       /* extendExpressApp: (app, context ) => {
 
         // ----- Route to redirect to Google -----
@@ -164,6 +183,4 @@ export default withAuth(
           }
         }); */
 
-      },
-  })
-);
+     
