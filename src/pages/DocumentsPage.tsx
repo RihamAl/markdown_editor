@@ -58,9 +58,9 @@ export default function DocumentsPage() {
     }
   }
 
-  async function handleCreate(title: string, content: string) {
+  async function handleCreate(title: string, content: string, file?: File) {
     try {
-      const newDoc = await createDocument(title, content);
+      const newDoc = await createDocument(title, content, file);
       setDocuments([...documents, newDoc]);
       setCreating(false);
     } catch (err) {
