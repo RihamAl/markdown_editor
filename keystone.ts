@@ -1,13 +1,14 @@
 // keystone.ts
-import 'dotenv/config'; // ✅ هذا يحمّل القيم من .env مباشرة
+import 'dotenv/config'; //  هذا يحمّل القيم من .env مباشرة
 import { config, list } from '@keystone-6/core';
-import { text, password, relationship } from '@keystone-6/core/fields';
+import { text, password, relationship, timestamp } from '@keystone-6/core/fields';
 import { createAuth } from '@keystone-6/auth';
 import { statelessSessions } from '@keystone-6/core/session';
-import { OAuth2Client } from 'google-auth-library';
+//import { OAuth2Client } from 'google-auth-library';
+
 
 // Session setup
-const sessionSecret = 'a really long random string at least 32 chars';
+const sessionSecret = process.env.SESSION_SECRET || 'a really long random string at least 32 chars';
 const session = statelessSessions({
   secret: sessionSecret,
   maxAge: 60 * 60 * 24 * 30, // 30 days
@@ -43,6 +44,7 @@ export const User = list({
     password: password(),
     // add the inverse relationship so Keystone knows the connection between users and documents
     documents: relationship({ ref: 'Document.owner', many: true }),
+    createdAt: timestamp({ defaultValue: { kind: 'now' } }),
   },
 });
 
@@ -75,6 +77,7 @@ export const Document = list({
     title: text({ validation: { isRequired: true } }),
     content: text(),
     owner: relationship({ ref: 'User.documents' }), // link with the correct relationship
+    createdAt: timestamp({ defaultValue: { kind: 'now' } ,}),
   },
 
   hooks: {
@@ -92,11 +95,11 @@ export const Document = list({
   },
 });
 
-const oauth2Client = new OAuth2Client(
+/* const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
-);
+); */
 
 
 // Export Keystone configuration
@@ -108,13 +111,14 @@ export default withAuth(
     server: {
       port: 3000,
       cors: { origin: ['http://localhost:5173'], credentials: true },
-      extendExpressApp: (app, context ) => {
+      /* extendExpressApp: (app, context ) => {
 
         // ----- Route to redirect to Google -----
         app.get('/auth/google', (req, res) => {
           const url = oauth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: ['profile', 'email'],
+            prompt: 'select_account', // force Google to ask account every time
           });
           res.redirect(url);
         });
@@ -122,6 +126,7 @@ export default withAuth(
         // ----- Google callback route -----
         app.get('/auth/google/callback', async (req, res) => {
           try {
+            
             const { code } = req.query;
             if (!code) return res.status(400).send('No code provided');
 
@@ -140,17 +145,25 @@ export default withAuth(
             // البحث أو إنشاء المستخدم
             let user = await context.db.User.findOne({ where: { email } });
             if (!user) {
-              user = await context.db.User.createOne({ data: { email, name } });
+              user = await context.db.User.createOne({ data: { email, name } }); 
             }
+
+            console.log("SESSION BEFORE START:", context.session);
+            
+            await context.sessionStrategy?.start({
+              context,
+              data: { id: user.id, name: user.name, email: user.email },
+            });
+            console.log("SESSION AFTER START:", context.session);
+
 
             res.redirect('http://localhost:5173/documents'); // redirect to frontend
           } catch (err) {
             console.error(err);
             res.status(500).send('Google login failed');
           }
-        });
+        }); */
 
       },
-    },
   })
 );
